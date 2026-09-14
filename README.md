@@ -15,24 +15,32 @@ UDS 诊断测试是汽车电子测试工程师的核心工作之一。传统诊�
 
 ```mermaid
 flowchart LR
-    subgraph CI["GitHub Actions（云端 CI）"]
-        A[git push 触发] --> B[自动运行 82 条测试]
-        B --> C[上传 HTML 报告工件]
+    subgraph CI["GitHub Actions · 持续集成"]
+        PUSH["git push / PR 触发"] --> MATRIX["Python 3.10 / 3.11 / 3.12 矩阵<br/>并行执行全量测试"]
+        MATRIX --> ART["归档测试报告与覆盖率工件"]
     end
 
-    subgraph PLATFORM["测试平台（本地 / 云端通用）"]
-        direction TB
-        PT["pytest 用例层<br/>正向 / 负向 / 边界值 / 时序 / 健壮性"]
-        CF["conftest.py<br/>fixture：用例级 ECU 自动启动与销毁"]
-        UT["UdsTester 诊断仪<br/>请求-响应-计时封装"]
-        ECU["VirtualECU 虚拟 ECU<br/>状态机：会话控制 + 安全锁"]
-        DID[("DID 数据库<br/>(VIN / 序列号 / 版本号)")]
-        PT --> CF --> UT
-        UT -- "0x7E0 诊断请求" --> ECU
-        ECU -- "0x7E8 诊断响应" --> UT
+    subgraph TEST["测试层"]
+        PT["pytest 用例集<br/>正向 · 负向 · 边界值 · 时序 · 健壮性"]
+        FIX["conftest.py<br/>fixture：用例级 ECU 生命周期管理"]
+        RPT["pytest-html / pytest-cov<br/>测试报告 · 覆盖率统计"]
+    end
+
+    subgraph ENG["测试引擎层"]
+        UT["UdsTester 诊断仪<br/>请求 / 响应 / P2 计时"]
+    end
+
+    subgraph DUT["被测对象（DUT）"]
+        ECU["VirtualECU<br/>UDS 四服务 + 状态机（会话 × 安全锁）"]
+        DID[("DID 数据库<br/>VIN / 序列号 / 软件版本")]
         ECU --- DID
     end
-```
+
+    PT --> FIX --> UT
+    PT --> RPT
+    UT -- "CAN 0x7E0 诊断请求" --> ECU
+    ECU -- "CAN 0x7E8 诊断响应" --> UT
+    CI -. 本地与云端运行同一套测试 .-> TEST
 
 ## ✨ 核心功能
 
