@@ -131,8 +131,8 @@ class VirtualECU:
 '''
 # -*- coding: utf-8 -*-
 """
-虚拟ECU模块 v2（Day3：加入状态机）
-相比Day2新增：
+虚拟ECU模块
+实现 UDS（ISO 14229）核心诊断服务与"会话 × 安全锁"状态机：
 - 0x10 会话控制：默认会话 / 扩展会话
 - 0x27 安全访问：种子&密钥解锁机制
 - 0x2E 写数据服务：受会话和安全状态双重保护
@@ -186,11 +186,11 @@ class VirtualECU:
         # 可写DID白名单：不在此列表的DID一律只读（软件版本号不允许改写）
         self.writable_dids = {0xF190, 0xF18C}
 
-        # ===== Day3新增：ECU状态变量（状态机的核心） =====
+        # ===== ECU状态变量（状态机的核心） =====
         self.session = self.SESSION_DEFAULT  # 当前会话：上电后处于默认会话
         self.security_unlocked = False       # 安全状态：上电后处于锁定状态
 
-        # 服务分发表：SID → 处理函数（Day3注册了两个新服务）
+        # 服务分发表：SID → 处理函数（新增服务只需在此注册一行）
         self.service_handlers = {
             0x10: self._handle_session_control,            # 会话控制
             0x22: self._handle_read_data_by_identifier,    # 读数据
@@ -200,7 +200,7 @@ class VirtualECU:
 
         self._running = False  # 主循环运行标志
 
-    # ==================== 主循环（与Day2相同） ====================
+    # ==================== 主循环 ====================
     def start(self) -> None:
         """启动ECU：持续监听总线（阻塞循环，需在独立线程中运行）"""
         self._running = True
@@ -221,7 +221,7 @@ class VirtualECU:
         """关闭总线，释放资源"""
         self.bus.shutdown()
 
-    # ==================== 请求分发（与Day2相同） ====================
+    # ==================== 请求分发 ====================
     def _handle_request(self, msg: can.Message) -> None:
         """解析请求帧，按SID分发到对应服务处理函数"""
         if len(msg.data) < 2:
@@ -237,7 +237,7 @@ class VirtualECU:
             return
         handler(msg.data, length)
 
-    # ==================== 0x10 会话控制（Day3新增） ====================
+    # ==================== 0x10 会话控制 ====================
     def _handle_session_control(self, data, length):
         """处理 DiagnosticSessionControl：切换诊断会话"""
         # 校验1：长度必须是2（SID + 子功能）
@@ -264,7 +264,7 @@ class VirtualECU:
         payload = [sub, 0x00, 0x32, 0x01, 0xF4]
         self._send_positive_response(0x10, payload)
 
-    # ==================== 0x22 读数据服务（与Day2相同） ====================
+    # ==================== 0x22 读数据服务 ====================
     def _handle_read_data_by_identifier(self, data, length):
         """处理 ReadDataByIdentifier：按DID读取ECU内部数据（任何会话下都允许）"""
         if length != 0x03:                       # 长度校验
@@ -277,7 +277,7 @@ class VirtualECU:
         payload = [data[2], data[3]] + self.did_table[did]  # DID回显 + 数据
         self._send_positive_response(0x22, payload)
 
-    # ==================== 0x27 安全访问（Day3新增） ====================
+    # ==================== 0x27 安全访问 ====================
     def _handle_security_access(self, data, length):
         """处理 SecurityAccess：种子&密钥挑战，通过后解锁"""
         # 校验1：安全访问必须在扩展会话下进行（默认会话直接拒绝）
@@ -316,7 +316,7 @@ class VirtualECU:
             # 其他子功能不支持
             self._send_negative_response(0x27, self.NRC_SUB_FUNCTION_NOT_SUPPORTED)
 
-    # ==================== 0x2E 写数据服务（Day3新增） ====================
+    # ==================== 0x2E 写数据服务 ====================
     def _handle_write_data_by_identifier(self, data, length):
         """处理 WriteDataByIdentifier：修改ECU内部数据（受双重保护）"""
         # NRC检查优先级（ISO 14229推荐顺序）：长度 → 会话 → 安全 → DID范围
@@ -344,7 +344,7 @@ class VirtualECU:
         # 正响应：0x6E + DID回显
         self._send_positive_response(0x2E, [data[2], data[3]])
 
-    # ==================== 响应发送（与Day2相同） ====================
+    # ==================== 响应发送 ====================
     def _send_positive_response(self, sid, payload):
         """发送正响应：响应SID = 请求SID + 0x40"""
         resp_sid = sid + 0x40

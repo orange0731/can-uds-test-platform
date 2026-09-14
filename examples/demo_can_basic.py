@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Day1 Demo：虚拟CAN总线最基本的发送与接收"""
+"""虚拟CAN总线基本收发示例"""
 import can  # 导入python-can库，它是Python操作CAN总线的标准库
 
 # 创建发送方总线对象：interface='virtual' 表示纯软件模拟总线，无需任何硬件

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Day1 Demo：模拟一次最简单的UDS诊断问答（读取VIN码）"""
+"""UDS诊断问答最小示例（读取VIN码）"""
 import can  # 导入python-can库
 
 TESTER_ID = 0x7E0  # 诊断仪请求的CAN ID（行业标准约定）

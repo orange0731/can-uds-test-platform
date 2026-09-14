@@ -1,41 +1,40 @@
-# 流水线名称：会显示在GitHub的Actions页面和徽章上
-name: UDS自动化测试
+name: CI
 
-# 触发条件：什么时候自动运行这条流水线
 on:
-  push:                      # 每次push代码时
-    branches: [master, main] # 只监听master和main分支
-  pull_request:              # 每次发起Pull Request时（团队协作场景）
+  push:
     branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:        # 支持在Actions页面手动触发
 
 jobs:
-  test:                              # 任务ID（可自定义）
-    runs-on: ubuntu-latest           # 运行在GitHub提供的Ubuntu云服务器上
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false      # 某个版本失败时其他版本继续跑完，便于定位版本特有问题
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']   # 主流版本兼容性矩阵
+
     steps:
-      # 第1步：把仓库代码检出到云服务器（GitHub官方动作，固定写法）
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 第2步：安装Python环境（GitHub官方动作）
-      - name: 安装Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'     # 云端Python版本
+          python-version: ${{ matrix.python-version }}
 
-      # 第3步：安装项目依赖（和本地完全一样，靠requirements.txt）
-      - name: 安装依赖
+      - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # 第4步：运行全部测试（pytest.ini里已配置自动生成HTML报告+覆盖率）
-      - name: 运行82条自动化测试
+      - name: Run test suite
         run: python -m pytest
 
-      # 第5步：把测试报告上传为"工件"（可在Actions页面下载查看）
-      - name: 上传测试报告
-        if: always()                 # 【关键】即使测试失败也上传——失败时更需要看报告！
+      - name: Archive test reports
+        if: always()        # 失败时同样归档报告，便于排查
         uses: actions/upload-artifact@v4
         with:
-          name: uds-test-reports                    # 工件名称
-          path: |                                     # 要上传的文件（竖杠表示多行列表）
+          name: test-reports-py${{ matrix.python-version }}
+          path: |
             reports/uds_test_report.html
             reports/coverage_html/
