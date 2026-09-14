@@ -65,3 +65,9 @@ class TestSecurityAccess:
         tester.request([0x02, 0x27, 0x01])
         resp = tester.request([length, 0x27, 0x02, 0x5A, 0x49, 0, 0, 0])
         assert resp[1:4] == [0x7F, 0x27, 0x13]
+    def test_seed_wrong_length_nrc13(self, ecu_and_tester):
+        """请求种子时长度不等于2 -> NRC 0x13（覆盖率驱动补充分支）"""
+        _, tester = ecu_and_tester
+        _goto_extended(tester)
+        resp = tester.request([0x03, 0x27, 0x01, 0x00, 0, 0, 0, 0])
+        assert resp[1:4] == [0x7F, 0x27, 0x13]

@@ -8,7 +8,7 @@ UNSUPPORTED_SIDS = [0x00, 0x01, 0x02, 0x09, 0x0A, 0x11, 0x19, 0x21, 0x28,
 
 
 class TestUnsupportedService:
-    @pytest.mark.parametrize("sid", UNSUPPORTED_SIDS)  # 一行代码 = 19条用例
+    @pytest.mark.parametrize("sid", UNSUPPORTED_SIDS, ids=lambda s: f"SID-0x{s:02X}")
     def test_unsupported_sid_nrc11(self, ecu_and_tester, sid):
         """未实现的服务 → NRC 0x11（服务不支持）"""
         _, tester = ecu_and_tester

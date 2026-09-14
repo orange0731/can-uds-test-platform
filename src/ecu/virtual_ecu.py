@@ -9,7 +9,11 @@
 - 对非法请求回复标准负响应（格式：0x7F + SID + NRC）
 """
 '''
-import can  # python-can库，负责CAN总线通信
+import logging  # 标准日志模块：输出可分级、可静默
+
+import can
+
+logger = logging.getLogger(__name__)  # 当前模块日志器  # python-can库，负责CAN总线通信
 
 
 class VirtualECU:
@@ -20,7 +24,7 @@ class VirtualECU:
     NRC_INCORRECT_LENGTH = 0x13        # 报文长度错误
     NRC_REQUEST_OUT_OF_RANGE = 0x31    # 请求超出范围（如DID不存在）
 
-    def __init__(self, channel='vcan0', request_id=0x7E0, response_id=0x7E8):
+    def __init__(self, channel: str = 'vcan0', request_id: int = 0x7E0, response_id: int = 0x7E8) -> None:
         """初始化ECU：建立总线连接、准备内部数据"""
         self.request_id = request_id    # 诊断请求CAN ID（只听这个ID）
         self.response_id = response_id  # 诊断响应CAN ID
@@ -46,10 +50,10 @@ class VirtualECU:
         self._running = False  # 主循环运行标志（用于优雅退出）
 
     # ==================== 主循环 ====================
-    def start(self):
+    def start(self) -> None:
         """启动ECU：持续监听总线（阻塞循环，需在独立线程中运行）"""
         self._running = True
-        print("[ECU] 已启动，开始监听总线...")
+        logger.info("[ECU] 已启动，开始监听总线...")
         while self._running:
             # 从总线读一帧，最多等0.1秒（超时是为了能定期检查退出标志）
             msg = self.bus.recv(timeout=0.1)
@@ -59,23 +63,23 @@ class VirtualECU:
                 continue                          # 不是发给我的诊断请求，忽略
             self._handle_request(msg)             # 交给分发器处理
 
-    def stop(self):
+    def stop(self) -> None:
         """通知主循环退出（只改标志位，循环会在0.1秒内自然结束）"""
         self._running = False
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """关闭总线，释放资源（应在主循环退出后调用）"""
         self.bus.shutdown()
 
     # ==================== 请求分发 ====================
-    def _handle_request(self, msg):
+    def _handle_request(self, msg: can.Message) -> None:
         """解析请求帧，按SID分发到对应服务处理函数"""
         if len(msg.data) < 2:
             return  # 帧长度连"长度+SID"都不够，是畸形帧，直接忽略
 
         length = msg.data[0]  # 第0字节：有效数据长度（简化版ISO-TP单帧PCI）
         sid = msg.data[1]     # 第1字节：服务ID
-        print(f"[ECU] 收到请求: SID=0x{sid:02X}")
+        logger.info(f"[ECU] 收到请求: SID=0x{sid:02X}")
 
         # 查分发表，获取该SID对应的处理函数
         handler = self.service_handlers.get(sid)
@@ -115,7 +119,7 @@ class VirtualECU:
         msg = can.Message(arbitration_id=self.response_id,
                           data=frame, is_extended_id=False)
         self.bus.send(msg)
-        print(f"[ECU] 发送正响应: SID=0x{resp_sid:02X}")
+        logger.info(f"[ECU] 发送正响应: SID=0x{resp_sid:02X}")
 
     def _send_negative_response(self, sid, nrc):
         """发送负响应：固定格式 0x7F + 原SID + NRC"""
@@ -123,7 +127,7 @@ class VirtualECU:
         msg = can.Message(arbitration_id=self.response_id,
                           data=frame, is_extended_id=False)
         self.bus.send(msg)
-        print(f"[ECU] 发送负响应: SID=0x{sid:02X}, NRC=0x{nrc:02X}")
+        logger.info(f"[ECU] 发送负响应: SID=0x{sid:02X}, NRC=0x{nrc:02X}")
 '''
 # -*- coding: utf-8 -*-
 """
@@ -134,9 +138,13 @@ class VirtualECU:
 - 0x2E 写数据服务：受会话和安全状态双重保护
 - ECU从"无状态"变为"有状态"，同类请求在不同状态下响应不同
 """
+import logging
+import logging  # 标准日志模块：输出可分级、可静默
 
-import can  # python-can库，负责CAN总线通信
+import can
 
+logger = logging.getLogger(__name__)  # 当前模块日志器  # python-can库，负责CAN总线通信
+logger = logging.getLogger(__name__)
 
 class VirtualECU:
     """虚拟ECU：本项目的被测对象（DUT, Device Under Test）"""
@@ -158,7 +166,7 @@ class VirtualECU:
     SEED_FIXED = 0xA5B6       # 固定种子（真实ECU用随机数，固定值便于自动化测试）
     KEY_MASK = 0xFFFF         # 密钥算法：密钥 = 种子 XOR 0xFFFF
 
-    def __init__(self, channel='vcan0', request_id=0x7E0, response_id=0x7E8):
+    def __init__(self, channel: str = 'vcan0', request_id: int = 0x7E0, response_id: int = 0x7E8) -> None:
         """初始化ECU：建立总线连接、准备内部数据和状态"""
         self.request_id = request_id    # 诊断请求CAN ID
         self.response_id = response_id  # 诊断响应CAN ID
@@ -193,10 +201,10 @@ class VirtualECU:
         self._running = False  # 主循环运行标志
 
     # ==================== 主循环（与Day2相同） ====================
-    def start(self):
+    def start(self) -> None:
         """启动ECU：持续监听总线（阻塞循环，需在独立线程中运行）"""
         self._running = True
-        print("[ECU] 已启动，开始监听总线...")
+        logger.info("[ECU] 已启动，开始监听总线...")
         while self._running:
             msg = self.bus.recv(timeout=0.1)   # 读一帧，最多等0.1秒
             if msg is None:
@@ -205,23 +213,23 @@ class VirtualECU:
                 continue                       # 不是发给我的请求，忽略
             self._handle_request(msg)          # 交给分发器
 
-    def stop(self):
+    def stop(self) -> None:
         """通知主循环退出"""
         self._running = False
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """关闭总线，释放资源"""
         self.bus.shutdown()
 
     # ==================== 请求分发（与Day2相同） ====================
-    def _handle_request(self, msg):
+    def _handle_request(self, msg: can.Message) -> None:
         """解析请求帧，按SID分发到对应服务处理函数"""
         if len(msg.data) < 2:
             return  # 畸形帧，直接忽略
 
         length = msg.data[0]  # 有效数据长度（简化版单帧PCI）
         sid = msg.data[1]     # 服务ID
-        print(f"[ECU] 收到请求: SID=0x{sid:02X}")
+        logger.info(f"[ECU] 收到请求: SID=0x{sid:02X}")
 
         handler = self.service_handlers.get(sid)  # 查分发表
         if handler is None:
@@ -250,7 +258,7 @@ class VirtualECU:
         self.session = sub
         if sub == self.SESSION_DEFAULT:
             self.security_unlocked = False
-        print(f"[ECU] 会话切换: 0x{old_session:02X} -> 0x{sub:02X}, 安全锁={'解锁' if self.security_unlocked else '锁定'}")
+        logger.info(f"[ECU] 会话切换: 0x{old_session:02X} -> 0x{sub:02X}, 安全锁={'解锁' if self.security_unlocked else '锁定'}")
 
         # 正响应：0x50 + 子功能回显 + 会话时间参数(P2/P2*，此处给标准固定值)
         payload = [sub, 0x00, 0x32, 0x01, 0xF4]
@@ -301,7 +309,7 @@ class VirtualECU:
                 return
             # 密钥正确 → 解锁！
             self.security_unlocked = True
-            print("[ECU] 密钥正确，安全解锁成功 🔓")
+            logger.info("[ECU] 密钥正确，安全解锁成功 🔓")
             self._send_positive_response(0x27, [sub])
 
         else:
@@ -332,7 +340,7 @@ class VirtualECU:
 
         # 全部通过 → 真正执行写入（修改内部状态！）
         self.did_table[did] = [data[4], data[5], data[6], data[7]]
-        print(f"[ECU] DID 0x{did:04X} 已写入新数据: {[hex(b) for b in self.did_table[did]]}")
+        logger.info(f"[ECU] DID 0x{did:04X} 已写入新数据: {[hex(b) for b in self.did_table[did]]}")
         # 正响应：0x6E + DID回显
         self._send_positive_response(0x2E, [data[2], data[3]])
 
@@ -345,7 +353,7 @@ class VirtualECU:
         msg = can.Message(arbitration_id=self.response_id,
                           data=frame, is_extended_id=False)
         self.bus.send(msg)
-        print(f"[ECU] 发送正响应: SID=0x{resp_sid:02X}")
+        logger.info(f"[ECU] 发送正响应: SID=0x{resp_sid:02X}")
 
     def _send_negative_response(self, sid, nrc):
         """发送负响应：固定格式 0x7F + 原SID + NRC"""
@@ -353,4 +361,4 @@ class VirtualECU:
         msg = can.Message(arbitration_id=self.response_id,
                           data=frame, is_extended_id=False)
         self.bus.send(msg)
-        print(f"[ECU] 发送负响应: SID=0x{sid:02X}, NRC=0x{nrc:02X}")
+        logger.info(f"[ECU] 发送负响应: SID=0x{sid:02X}, NRC=0x{nrc:02X}")
