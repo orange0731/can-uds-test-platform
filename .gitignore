@@ -1,4 +1,6 @@
 ﻿venv/
 __pycache__/
 reports/*.html
+reports/coverage_html/
 *.pyc
+.coverage

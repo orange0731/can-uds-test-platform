@@ -40,3 +40,18 @@ def unlocked_tester(ecu_and_tester):
     key = seed ^ 0xFFFF                                        # 按约定算法算密钥
     tester.request([0x04, 0x27, 0x02, key >> 8, key & 0xFF])   # 送密钥解锁
     return tester  # 返回"已解锁"状态的诊断仪
+# ==================== pytest-html 报告定制钩子 ====================
+
+def pytest_html_report_title(report):
+    """自定义HTML报告的标题（pytest-html约定的钩子函数，自动被调用）"""
+    report.title = "CAN/UDS 诊断自动化测试报告"
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_metadata(metadata):
+    """自定义报告顶部的"环境信息"区域（让报告看起来更专业）"""
+    metadata["项目名称"] = "CAN/UDS诊断自动化测试平台"
+    metadata["被测对象"] = "VirtualECU v1.0（虚拟CAN总线）"
+    metadata["测试标准"] = "ISO 14229 (UDS)"
+    metadata.pop("Plugins", None)   # 隐藏冗长的插件列表
+    metadata.pop("Packages", None)  # 隐藏包版本列表

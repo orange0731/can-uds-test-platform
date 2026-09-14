@@ -1,0 +1,17 @@
+[run]
+; 只统计src目录下的被测代码
+source = src
+; 【关键】我们的ECU跑在子线程里，不加这行，线程中的代码覆盖率会显示为0%（假阴性！）
+concurrency = thread
+; 同时统计分支覆盖率（比语句覆盖率更严格，面试更硬核）
+branch = true
+; 排除Day1的教学demo文件，它们不参与测试，不统计
+omit =
+    src/demo_*
+    src/__init__.py
+    src/ecu/__init__.py
+    src/tester/__init__.py
+
+[report]
+; 终端输出时显示每个文件具体哪几行没被覆盖到
+show_missing = true
