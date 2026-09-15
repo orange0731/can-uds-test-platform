@@ -258,7 +258,6 @@ open reports/coverage_html/index.html
 │   ├── test_design.md
 │   │   # 测试设计说明书
 │   ├── development_log.md
-│   │   # 阶段制开发记录与关键决策
 │   └── images/
 │       ├── architecture.png
 │       ├── test_report.png
