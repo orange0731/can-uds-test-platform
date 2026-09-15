@@ -64,17 +64,43 @@
 
 ## 效果展示
 
-| 系统架构 | 测试全绿 |
-|---|---|
-| ![系统架构](docs/images/architecture.png) | ![测试全绿](docs/images/test_report.png) |
+### 1. 系统架构
 
-| GitHub Actions CI | 代码覆盖率 |
-|---|---|
-| ![GitHub Actions CI](docs/images/ci_passed.png) | ![代码覆盖率](docs/images/coverage.png) |
+<p align="center">
+  <img src="docs/images/architecture.png" alt="系统架构图" width="85%">
+</p>
 
-> 若图片暂未上传，可先创建 `docs/images/` 目录，并将测试报告、CI 页面和覆盖率页面截图保存至对应位置。
+> 图 1：CAN/UDS 诊断自动化测试平台系统架构。
 
 ---
+
+### 2. pytest 测试全绿
+
+<p align="center">
+  <img src="docs/images/test_report.png" alt="pytest 测试全绿结果" width="85%">
+</p>
+
+> 图 2：pytest 自动化测试执行结果，全部测试用例通过。
+
+---
+
+### 3. GitHub Actions CI
+
+<p align="center">
+  <img src="docs/images/ci_passed.png" alt="GitHub Actions CI 通过" width="85%">
+</p>
+
+> 图 3：GitHub Actions 在 Python 3.10、3.11 和 3.12 环境下的持续集成验证结果。
+
+---
+
+### 4. 代码覆盖率
+
+<p align="center">
+  <img src="docs/images/coverage.png" alt="代码覆盖率报告" width="85%">
+</p>
+
+> 图 4：pytest-cov 生成的语句覆盖率与分支覆盖率报告。
 
 ## 系统架构
 
