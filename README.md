@@ -257,7 +257,6 @@ open reports/coverage_html/index.html
 │   │   # UDS 协议要点
 │   ├── test_design.md
 │   │   # 测试设计说明书
-│   ├── development_log.md
 │   └── images/
 │       ├── architecture.png
 │       ├── test_report.png
