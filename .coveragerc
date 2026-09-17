@@ -1,17 +1,70 @@
+# ==============================
+# coverage.py 覆盖率统计配置
+# ==============================
+
 [run]
-; 只统计src目录下的被测代码
-source = src
-; 【关键】我们的ECU跑在子线程里，不加这行，线程中的代码覆盖率会显示为0%（假阴性！）
-concurrency = thread
-; 同时统计分支覆盖率（比语句覆盖率更严格，面试更硬核）
+# 仅将 src/ 目录视为被测代码（SUT, System Under Test）。
+# tests/、examples/ 和文档代码不纳入覆盖率分母。
+source =
+    src
+
+# 启用分支覆盖率统计。
+# 除了统计“代码行是否执行”，还会检查 if/else、异常分支、
+# 状态机迁移分支等是否被测试用例覆盖。
 branch = true
-; 排除Day1的教学demo文件，它们不参与测试，不统计
+
+# 虚拟 ECU 在后台监听线程中运行。
+# 显式声明 thread 并保持与多线程运行模型一致，
+# 确保 ECU 服务处理函数的执行路径能够被覆盖率工具正确归集。
+concurrency =
+    thread
+
+# 当未来扩展为多进程测试或 CI 并行执行时，
+# 可将 parallel 修改为 true，并使用 coverage combine 合并数据。
+parallel = false
+
+# 覆盖率原始数据文件位置。
+# 默认生成在项目根目录的 .coverage 文件中。
+data_file = .coverage
+
+# 不统计以下文件：
+# 1. Day1 / 教学演示代码；
+# 2. 仅用于包识别的 __init__.py；
+# 3. 不属于 VirtualECU 和 UdsTester 核心逻辑的文件。
 omit =
-    src/demo_*
+    src/demo_*.py
     src/__init__.py
     src/ecu/__init__.py
     src/tester/__init__.py
 
 [report]
-; 终端输出时显示每个文件具体哪几行没被覆盖到
+# 在终端覆盖率报告中显示未被覆盖的具体行号，
+# 便于根据缺口补充针对性的测试用例。
 show_missing = true
+
+# 覆盖率报告保留两位小数，例如 100.00%。
+precision = 2
+
+# 忽略无法被执行的防御性代码或仅用于类型检查的代码。
+# 注意：不要随意添加业务逻辑到 exclude_lines，否则会“虚高”覆盖率。
+exclude_lines =
+    # pragma: no cover
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    raise NotImplementedError
+
+# 覆盖率低于该阈值时 pytest 返回失败状态码。
+# 当前项目目标为语句和分支覆盖率均达到 100%，
+# 可在 CI 中通过 --cov-fail-under=100 进一步强制执行。
+fail_under = 100
+
+[html]
+# pytest.ini 中会通过 --cov-report=html 指定此目录。
+directory = reports/coverage_html
+
+# HTML 覆盖率报告标题。
+title = CAN/UDS Diagnostic Test Platform - Coverage Report
+
+[xml]
+# 为后续接入 SonarQube、Codecov、GitHub Actions 等平台预留 XML 报告。
+output = reports/coverage.xml

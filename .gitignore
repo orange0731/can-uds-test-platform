@@ -1,6 +1,101 @@
-﻿venv/
+﻿# ==============================
+# Python 虚拟环境
+# ==============================
+
+# 常见虚拟环境目录
+venv/
+.venv/
+env/
+ENV/
+
+# ==============================
+# Python 缓存与编译产物
+# ==============================
+
+# Python 字节码缓存目录
 __pycache__/
-reports/*.html
-reports/coverage_html/
-*.pyc
+
+# Python 编译后的字节码文件
+*.py[cod]
+*$py.class
+
+# ==============================
+# 测试、覆盖率与报告产物
+# ==============================
+
+# pytest 运行缓存
+.pytest_cache/
+
+# coverage.py 原始覆盖率数据
 .coverage
+.coverage.*
+coverage.xml
+
+# pytest-html 自动生成的测试报告
+reports/*.html
+
+# pytest-cov 自动生成的 HTML 覆盖率目录
+reports/coverage_html/
+
+# CI 或本地执行时可能生成的其他报告
+reports/*.xml
+reports/*.json
+
+# 保留 reports 目录本身，使项目目录结构可见。
+# 请手工创建 reports/.gitkeep 文件，并确保该文件提交到 Git。
+!reports/.gitkeep
+
+# ==============================
+# 构建与发布产物
+# ==============================
+
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+
+# ==============================
+# IDE / 编辑器配置
+# ==============================
+
+# Visual Studio Code
+.vscode/
+
+# PyCharm / IntelliJ IDEA
+.idea/
+
+# Visual Studio
+.vs/
+
+# ==============================
+# 操作系统生成文件
+# ==============================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# ==============================
+# 日志与临时文件
+# ==============================
+
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# ==============================
+# 本地环境变量与敏感配置
+# ==============================
+
+# 若后续接入真实 CAN 接口、密钥或外部平台 Token，
+# 不应将本地环境变量文件提交到仓库。
+.env
+.env.*
+!.env.example
